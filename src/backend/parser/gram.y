@@ -602,7 +602,7 @@ static Node *makeRecursiveViewSelect(char *relname, List *aliases, Node *query);
 %type <list>		hash_partbound
 %type <defelt>		hash_partbound_elem
 
-%type <str>      naive_opt
+%type <boolean>      naive_opt
 
 /*
  * Non-keyword token types.  These are hard-wired into the "flex" lexer.
@@ -11547,7 +11547,8 @@ simple_select:
 		;
 
 naive_opt: NAIVELY {$$ = true;}
-		| NORMALLY {$$ = false;};
+		| NORMALLY {$$ = false;}
+		| /*EMPTY*/								{ $$ = false; };
 
 /*
  * SQL standard WITH clause looks like:
