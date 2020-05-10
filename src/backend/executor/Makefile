@@ -55,6 +55,7 @@ OBJS = \
 	nodeMergeAppend.o \
 	nodeMergejoin.o \
 	nodeModifyTable.o \
+	nodeNaivescan.o \
 	nodeNamedtuplestorescan.o \
 	nodeNestloop.o \
 	nodeProjectSet.o \

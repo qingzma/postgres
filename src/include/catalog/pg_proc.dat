@@ -10938,4 +10938,11 @@
   proname => 'is_normalized', prorettype => 'bool',
   proargtypes => 'text text', prosrc => 'unicode_is_normalized' },
 
+{ oid => '6122', descr => 'helloworld',
+  proname => 'helloworld', prorettype => 'text', proargtypes => '',
+  prosrc => 'helloworld' },
+
+{ oid => '6123', descr => 'strcon',
+  proname => 'strcon', prorettype => 'text', proargtypes => 'text text',
+  prosrc => 'strcon' },
 ]

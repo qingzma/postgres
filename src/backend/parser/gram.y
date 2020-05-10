@@ -602,6 +602,8 @@ static Node *makeRecursiveViewSelect(char *relname, List *aliases, Node *query);
 %type <list>		hash_partbound
 %type <defelt>		hash_partbound_elem
 
+%type <str>      naive_opt
+
 /*
  * Non-keyword token types.  These are hard-wired into the "flex" lexer.
  * They must be listed first so that their numeric codes do not depend on
@@ -674,8 +676,8 @@ static Node *makeRecursiveViewSelect(char *relname, List *aliases, Node *query);
 
 	MAPPING MATCH MATERIALIZED MAXVALUE METHOD MINUTE_P MINVALUE MODE MONTH_P MOVE
 
-	NAME_P NAMES NATIONAL NATURAL NCHAR NEW NEXT NFC NFD NFKC NFKD NO NONE
-	NORMALIZE NORMALIZED
+	NAIVELY NAME_P NAMES NATIONAL NATURAL NCHAR NEW NEXT NFC NFD NFKC NFKD NO NONE
+	NORMALIZE NORMALIZED NORMALLY
 	NOT NOTHING NOTIFY NOTNULL NOWAIT NULL_P NULLIF
 	NULLS_P NUMERIC
 
@@ -11480,18 +11482,19 @@ select_clause:
  * However, this is not checked by the grammar; parse analysis must check it.
  */
 simple_select:
-			SELECT opt_all_clause opt_target_list
+			SELECT naive_opt opt_all_clause opt_target_list
 			into_clause from_clause where_clause
 			group_clause having_clause window_clause
 				{
 					SelectStmt *n = makeNode(SelectStmt);
-					n->targetList = $3;
-					n->intoClause = $4;
-					n->fromClause = $5;
-					n->whereClause = $6;
-					n->groupClause = $7;
-					n->havingClause = $8;
-					n->windowClause = $9;
+					n->targetList = $4;
+					n->intoClause = $5;
+					n->fromClause = $6;
+					n->whereClause = $7;
+					n->groupClause = $8;
+					n->havingClause = $9;
+					n->windowClause = $10;
+					n->is_naive = $2;
 					$$ = (Node *)n;
 				}
 			| SELECT distinct_clause target_list
@@ -11542,6 +11545,9 @@ simple_select:
 					$$ = makeSetOp(SETOP_EXCEPT, $3, $1, $4);
 				}
 		;
+
+naive_opt: NAIVELY {$$ = true;}
+		| NORMALLY {$$ = false;};
 
 /*
  * SQL standard WITH clause looks like:

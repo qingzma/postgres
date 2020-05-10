@@ -501,23 +501,29 @@ typedef enum NodeTag
 	 * purposes (usually because they are involved in APIs where we want to
 	 * pass multiple object types through the same pointer).
 	 */
-	T_TriggerData,				/* in commands/trigger.h */
-	T_EventTriggerData,			/* in commands/event_trigger.h */
-	T_ReturnSetInfo,			/* in nodes/execnodes.h */
-	T_WindowObjectData,			/* private in nodeWindowAgg.c */
-	T_TIDBitmap,				/* in nodes/tidbitmap.h */
-	T_InlineCodeBlock,			/* in nodes/parsenodes.h */
-	T_FdwRoutine,				/* in foreign/fdwapi.h */
-	T_IndexAmRoutine,			/* in access/amapi.h */
-	T_TableAmRoutine,			/* in access/tableam.h */
-	T_TsmRoutine,				/* in access/tsmapi.h */
-	T_ForeignKeyCacheInfo,		/* in utils/rel.h */
-	T_CallContext,				/* in nodes/parsenodes.h */
-	T_SupportRequestSimplify,	/* in nodes/supportnodes.h */
+	T_TriggerData,					/* in commands/trigger.h */
+	T_EventTriggerData,				/* in commands/event_trigger.h */
+	T_ReturnSetInfo,				/* in nodes/execnodes.h */
+	T_WindowObjectData,				/* private in nodeWindowAgg.c */
+	T_TIDBitmap,					/* in nodes/tidbitmap.h */
+	T_InlineCodeBlock,				/* in nodes/parsenodes.h */
+	T_FdwRoutine,					/* in foreign/fdwapi.h */
+	T_IndexAmRoutine,				/* in access/amapi.h */
+	T_TableAmRoutine,				/* in access/tableam.h */
+	T_TsmRoutine,					/* in access/tsmapi.h */
+	T_ForeignKeyCacheInfo,			/* in utils/rel.h */
+	T_CallContext,					/* in nodes/parsenodes.h */
+	T_SupportRequestSimplify,		/* in nodes/supportnodes.h */
 	T_SupportRequestSelectivity,	/* in nodes/supportnodes.h */
-	T_SupportRequestCost,		/* in nodes/supportnodes.h */
-	T_SupportRequestRows,		/* in nodes/supportnodes.h */
-	T_SupportRequestIndexCondition	/* in nodes/supportnodes.h */
+	T_SupportRequestCost,			/* in nodes/supportnodes.h */
+	T_SupportRequestRows,			/* in nodes/supportnodes.h */
+	T_SupportRequestIndexCondition, /* in nodes/supportnodes.h */
+
+	/* 
+	 * qingzhi naive
+	 */
+	T_NaiveScan,
+	T_NaiveScanState,
 } NodeTag;
 
 /*
@@ -528,10 +534,10 @@ typedef enum NodeTag
  */
 typedef struct Node
 {
-	NodeTag		type;
+	NodeTag type;
 } Node;
 
-#define nodeTag(nodeptr)		(((const Node*)(nodeptr))->type)
+#define nodeTag(nodeptr) (((const Node *)(nodeptr))->type)
 
 /*
  * newNode -
@@ -547,13 +553,14 @@ typedef struct Node
 #ifdef __GNUC__
 
 /* With GCC, we can use a compound statement within an expression */
-#define newNode(size, tag) \
-({	Node   *_result; \
-	AssertMacro((size) >= sizeof(Node));		/* need the tag, at least */ \
-	_result = (Node *) palloc0fast(size); \
-	_result->type = (tag); \
-	_result; \
-})
+#define newNode(size, tag)                                                \
+	({                                                                    \
+		Node *_result;                                                    \
+		AssertMacro((size) >= sizeof(Node)); /* need the tag, at least */ \
+		_result = (Node *)palloc0fast(size);                              \
+		_result->type = (tag);                                            \
+		_result;                                                          \
+	})
 #else
 
 /*
@@ -564,20 +571,18 @@ typedef struct Node
  */
 extern PGDLLIMPORT Node *newNodeMacroHolder;
 
-#define newNode(size, tag) \
-( \
-	AssertMacro((size) >= sizeof(Node)),		/* need the tag, at least */ \
-	newNodeMacroHolder = (Node *) palloc0fast(size), \
-	newNodeMacroHolder->type = (tag), \
-	newNodeMacroHolder \
-)
-#endif							/* __GNUC__ */
+#define newNode(size, tag)                                                \
+	(                                                                     \
+		AssertMacro((size) >= sizeof(Node)), /* need the tag, at least */ \
+		newNodeMacroHolder = (Node *)palloc0fast(size),                   \
+		newNodeMacroHolder->type = (tag),                                 \
+		newNodeMacroHolder)
+#endif /* __GNUC__ */
 
+#define makeNode(_type_) ((_type_ *)newNode(sizeof(_type_), T_##_type_))
+#define NodeSetTag(nodeptr, t) (((Node *)(nodeptr))->type = (t))
 
-#define makeNode(_type_)		((_type_ *) newNode(sizeof(_type_),T_##_type_))
-#define NodeSetTag(nodeptr,t)	(((Node*)(nodeptr))->type = (t))
-
-#define IsA(nodeptr,_type_)		(nodeTag(nodeptr) == T_##_type_)
+#define IsA(nodeptr, _type_) (nodeTag(nodeptr) == T_##_type_)
 
 /*
  * castNode(type, ptr) casts ptr to "type *", and if assertions are enabled,
@@ -591,13 +596,12 @@ static inline Node *
 castNodeImpl(NodeTag type, void *ptr)
 {
 	Assert(ptr == NULL || nodeTag(ptr) == type);
-	return (Node *) ptr;
+	return (Node *)ptr;
 }
-#define castNode(_type_, nodeptr) ((_type_ *) castNodeImpl(T_##_type_, nodeptr))
+#define castNode(_type_, nodeptr) ((_type_ *)castNodeImpl(T_##_type_, nodeptr))
 #else
-#define castNode(_type_, nodeptr) ((_type_ *) (nodeptr))
-#endif							/* USE_ASSERT_CHECKING */
-
+#define castNode(_type_, nodeptr) ((_type_ *)(nodeptr))
+#endif /* USE_ASSERT_CHECKING */
 
 /* ----------------------------------------------------------------
  *					  extern declarations follow
@@ -607,8 +611,8 @@ castNodeImpl(NodeTag type, void *ptr)
 /*
  * nodes/{outfuncs.c,print.c}
  */
-struct Bitmapset;				/* not to include bitmapset.h here */
-struct StringInfoData;			/* not to include stringinfo.h here */
+struct Bitmapset;	   /* not to include bitmapset.h here */
+struct StringInfoData; /* not to include stringinfo.h here */
 
 extern void outNode(struct StringInfoData *str, const void *obj);
 extern void outToken(struct StringInfoData *str, const char *s);
@@ -640,7 +644,7 @@ extern void *copyObjectImpl(const void *obj);
 
 /* cast result back to argument type, if supported by compiler */
 #ifdef HAVE_TYPEOF
-#define copyObject(obj) ((typeof(obj)) copyObjectImpl(obj))
+#define copyObject(obj) ((typeof(obj))copyObjectImpl(obj))
 #else
 #define copyObject(obj) copyObjectImpl(obj)
 #endif
@@ -650,7 +654,6 @@ extern void *copyObjectImpl(const void *obj);
  */
 extern bool equal(const void *a, const void *b);
 
-
 /*
  * Typedefs for identifying qualifier selectivities and plan costs as such.
  * These are just plain "double"s, but declaring a variable as Selectivity
@@ -659,9 +662,8 @@ extern bool equal(const void *a, const void *b);
  * These could have gone into plannodes.h or some such, but many files
  * depend on them...
  */
-typedef double Selectivity;		/* fraction of tuples a qualifier will pass */
-typedef double Cost;			/* execution cost (in page-access units) */
-
+typedef double Selectivity; /* fraction of tuples a qualifier will pass */
+typedef double Cost;		/* execution cost (in page-access units) */
 
 /*
  * CmdType -
@@ -672,16 +674,15 @@ typedef double Cost;			/* execution cost (in page-access units) */
 typedef enum CmdType
 {
 	CMD_UNKNOWN,
-	CMD_SELECT,					/* select stmt */
-	CMD_UPDATE,					/* update stmt */
-	CMD_INSERT,					/* insert stmt */
+	CMD_SELECT, /* select stmt */
+	CMD_UPDATE, /* update stmt */
+	CMD_INSERT, /* insert stmt */
 	CMD_DELETE,
-	CMD_UTILITY,				/* cmds like create, destroy, copy, vacuum,
+	CMD_UTILITY, /* cmds like create, destroy, copy, vacuum,
 								 * etc. */
-	CMD_NOTHING					/* dummy command for instead nothing rules
+	CMD_NOTHING	 /* dummy command for instead nothing rules
 								 * with qual */
 } CmdType;
-
 
 /*
  * JoinType -
@@ -699,10 +700,10 @@ typedef enum JoinType
 	 * The canonical kinds of joins according to the SQL JOIN syntax. Only
 	 * these codes can appear in parser output (e.g., JoinExpr nodes).
 	 */
-	JOIN_INNER,					/* matching tuple pairs only */
-	JOIN_LEFT,					/* pairs + unmatched LHS tuples */
-	JOIN_FULL,					/* pairs + unmatched LHS + unmatched RHS */
-	JOIN_RIGHT,					/* pairs + unmatched RHS tuples */
+	JOIN_INNER, /* matching tuple pairs only */
+	JOIN_LEFT,	/* pairs + unmatched LHS tuples */
+	JOIN_FULL,	/* pairs + unmatched LHS + unmatched RHS */
+	JOIN_RIGHT, /* pairs + unmatched RHS tuples */
 
 	/*
 	 * Semijoins and anti-semijoins (as defined in relational theory) do not
@@ -713,15 +714,15 @@ typedef enum JoinType
 	 * which matching RHS row is joined to.  In JOIN_ANTI output, the row is
 	 * guaranteed to be null-extended.
 	 */
-	JOIN_SEMI,					/* 1 copy of each LHS row that has match(es) */
-	JOIN_ANTI,					/* 1 copy of each LHS row that has no match */
+	JOIN_SEMI, /* 1 copy of each LHS row that has match(es) */
+	JOIN_ANTI, /* 1 copy of each LHS row that has no match */
 
 	/*
 	 * These codes are used internally in the planner, but are not supported
 	 * by the executor (nor, indeed, by most of the planner).
 	 */
-	JOIN_UNIQUE_OUTER,			/* LHS path must be made unique */
-	JOIN_UNIQUE_INNER			/* RHS path must be made unique */
+	JOIN_UNIQUE_OUTER, /* LHS path must be made unique */
+	JOIN_UNIQUE_INNER  /* RHS path must be made unique */
 
 	/*
 	 * We might need additional join types someday.
@@ -743,10 +744,10 @@ typedef enum JoinType
  * quals attached to a semijoin can be treated the same as innerjoin quals.
  */
 #define IS_OUTER_JOIN(jointype) \
-	(((1 << (jointype)) & \
-	  ((1 << JOIN_LEFT) | \
-	   (1 << JOIN_FULL) | \
-	   (1 << JOIN_RIGHT) | \
+	(((1 << (jointype)) &       \
+	  ((1 << JOIN_LEFT) |       \
+	   (1 << JOIN_FULL) |       \
+	   (1 << JOIN_RIGHT) |      \
 	   (1 << JOIN_ANTI))) != 0)
 
 /*
@@ -757,10 +758,10 @@ typedef enum JoinType
  */
 typedef enum AggStrategy
 {
-	AGG_PLAIN,					/* simple agg across all input rows */
-	AGG_SORTED,					/* grouped agg, input must be sorted */
-	AGG_HASHED,					/* grouped agg, use internal hashtable */
-	AGG_MIXED					/* grouped agg, hash and sort both used */
+	AGG_PLAIN,	/* simple agg across all input rows */
+	AGG_SORTED, /* grouped agg, input must be sorted */
+	AGG_HASHED, /* grouped agg, use internal hashtable */
+	AGG_MIXED	/* grouped agg, hash and sort both used */
 } AggStrategy;
 
 /*
@@ -771,10 +772,10 @@ typedef enum AggStrategy
  */
 
 /* Primitive options supported by nodeAgg.c: */
-#define AGGSPLITOP_COMBINE		0x01	/* substitute combinefn for transfn */
-#define AGGSPLITOP_SKIPFINAL	0x02	/* skip finalfn, return state as-is */
-#define AGGSPLITOP_SERIALIZE	0x04	/* apply serialfn to output */
-#define AGGSPLITOP_DESERIALIZE	0x08	/* apply deserialfn to input */
+#define AGGSPLITOP_COMBINE 0x01		/* substitute combinefn for transfn */
+#define AGGSPLITOP_SKIPFINAL 0x02	/* skip finalfn, return state as-is */
+#define AGGSPLITOP_SERIALIZE 0x04	/* apply serialfn to output */
+#define AGGSPLITOP_DESERIALIZE 0x08 /* apply deserialfn to input */
 
 /* Supported operating modes (i.e., useful combinations of these options): */
 typedef enum AggSplit
@@ -788,10 +789,10 @@ typedef enum AggSplit
 } AggSplit;
 
 /* Test whether an AggSplit value selects each primitive option: */
-#define DO_AGGSPLIT_COMBINE(as)		(((as) & AGGSPLITOP_COMBINE) != 0)
-#define DO_AGGSPLIT_SKIPFINAL(as)	(((as) & AGGSPLITOP_SKIPFINAL) != 0)
-#define DO_AGGSPLIT_SERIALIZE(as)	(((as) & AGGSPLITOP_SERIALIZE) != 0)
-#define DO_AGGSPLIT_DESERIALIZE(as) (((as) & AGGSPLITOP_DESERIALIZE) != 0)
+#define DO_AGGSPLIT_COMBINE(as) (((as)&AGGSPLITOP_COMBINE) != 0)
+#define DO_AGGSPLIT_SKIPFINAL(as) (((as)&AGGSPLITOP_SKIPFINAL) != 0)
+#define DO_AGGSPLIT_SERIALIZE(as) (((as)&AGGSPLITOP_SERIALIZE) != 0)
+#define DO_AGGSPLIT_DESERIALIZE(as) (((as)&AGGSPLITOP_DESERIALIZE) != 0)
 
 /*
  * SetOpCmd and SetOpStrategy -
@@ -809,8 +810,8 @@ typedef enum SetOpCmd
 
 typedef enum SetOpStrategy
 {
-	SETOP_SORTED,				/* input must be sorted */
-	SETOP_HASHED				/* use internal hashtable */
+	SETOP_SORTED, /* input must be sorted */
+	SETOP_HASHED  /* use internal hashtable */
 } SetOpStrategy;
 
 /*
@@ -821,9 +822,9 @@ typedef enum SetOpStrategy
  */
 typedef enum OnConflictAction
 {
-	ONCONFLICT_NONE,			/* No "ON CONFLICT" clause */
-	ONCONFLICT_NOTHING,			/* ON CONFLICT ... DO NOTHING */
-	ONCONFLICT_UPDATE			/* ON CONFLICT ... DO UPDATE */
+	ONCONFLICT_NONE,	/* No "ON CONFLICT" clause */
+	ONCONFLICT_NOTHING, /* ON CONFLICT ... DO NOTHING */
+	ONCONFLICT_UPDATE	/* ON CONFLICT ... DO UPDATE */
 } OnConflictAction;
 
 /*
@@ -834,9 +835,9 @@ typedef enum OnConflictAction
  */
 typedef enum LimitOption
 {
-	LIMIT_OPTION_COUNT,			/* FETCH FIRST... ONLY */
-	LIMIT_OPTION_WITH_TIES,		/* FETCH FIRST... WITH TIES */
-	LIMIT_OPTION_DEFAULT,		/* No limit present */
+	LIMIT_OPTION_COUNT,		/* FETCH FIRST... ONLY */
+	LIMIT_OPTION_WITH_TIES, /* FETCH FIRST... WITH TIES */
+	LIMIT_OPTION_DEFAULT,	/* No limit present */
 } LimitOption;
 
-#endif							/* NODES_H */
+#endif /* NODES_H */

@@ -24,7 +24,6 @@ static text *dotrim(const char *string, int stringlen,
 					const char *set, int setlen,
 					bool doltrim, bool dortrim);
 
-
 /********************************************************************
  *
  * lower
@@ -40,11 +39,11 @@ static text *dotrim(const char *string, int stringlen,
  ********************************************************************/
 
 Datum
-lower(PG_FUNCTION_ARGS)
+	lower(PG_FUNCTION_ARGS)
 {
-	text	   *in_string = PG_GETARG_TEXT_PP(0);
-	char	   *out_string;
-	text	   *result;
+	text *in_string = PG_GETARG_TEXT_PP(0);
+	char *out_string;
+	text *result;
 
 	out_string = str_tolower(VARDATA_ANY(in_string),
 							 VARSIZE_ANY_EXHDR(in_string),
@@ -54,7 +53,6 @@ lower(PG_FUNCTION_ARGS)
 
 	PG_RETURN_TEXT_P(result);
 }
-
 
 /********************************************************************
  *
@@ -71,11 +69,11 @@ lower(PG_FUNCTION_ARGS)
  ********************************************************************/
 
 Datum
-upper(PG_FUNCTION_ARGS)
+	upper(PG_FUNCTION_ARGS)
 {
-	text	   *in_string = PG_GETARG_TEXT_PP(0);
-	char	   *out_string;
-	text	   *result;
+	text *in_string = PG_GETARG_TEXT_PP(0);
+	char *out_string;
+	text *result;
 
 	out_string = str_toupper(VARDATA_ANY(in_string),
 							 VARSIZE_ANY_EXHDR(in_string),
@@ -85,7 +83,6 @@ upper(PG_FUNCTION_ARGS)
 
 	PG_RETURN_TEXT_P(result);
 }
-
 
 /********************************************************************
  *
@@ -105,11 +102,11 @@ upper(PG_FUNCTION_ARGS)
  ********************************************************************/
 
 Datum
-initcap(PG_FUNCTION_ARGS)
+	initcap(PG_FUNCTION_ARGS)
 {
-	text	   *in_string = PG_GETARG_TEXT_PP(0);
-	char	   *out_string;
-	text	   *result;
+	text *in_string = PG_GETARG_TEXT_PP(0);
+	char *out_string;
+	text *result;
 
 	out_string = str_initcap(VARDATA_ANY(in_string),
 							 VARSIZE_ANY_EXHDR(in_string),
@@ -119,7 +116,6 @@ initcap(PG_FUNCTION_ARGS)
 
 	PG_RETURN_TEXT_P(result);
 }
-
 
 /********************************************************************
  *
@@ -138,22 +134,22 @@ initcap(PG_FUNCTION_ARGS)
  ********************************************************************/
 
 Datum
-lpad(PG_FUNCTION_ARGS)
+	lpad(PG_FUNCTION_ARGS)
 {
-	text	   *string1 = PG_GETARG_TEXT_PP(0);
-	int32		len = PG_GETARG_INT32(1);
-	text	   *string2 = PG_GETARG_TEXT_PP(2);
-	text	   *ret;
-	char	   *ptr1,
-			   *ptr2,
-			   *ptr2start,
-			   *ptr2end,
-			   *ptr_ret;
-	int			m,
-				s1len,
-				s2len;
+	text *string1 = PG_GETARG_TEXT_PP(0);
+	int32 len = PG_GETARG_INT32(1);
+	text *string2 = PG_GETARG_TEXT_PP(2);
+	text *ret;
+	char *ptr1,
+		*ptr2,
+		*ptr2start,
+		*ptr2end,
+		*ptr_ret;
+	int m,
+		s1len,
+		s2len;
 
-	int			bytelen;
+	int bytelen;
 
 	/* Negative len is silently taken as zero */
 	if (len < 0)
@@ -161,19 +157,19 @@ lpad(PG_FUNCTION_ARGS)
 
 	s1len = VARSIZE_ANY_EXHDR(string1);
 	if (s1len < 0)
-		s1len = 0;				/* shouldn't happen */
+		s1len = 0; /* shouldn't happen */
 
 	s2len = VARSIZE_ANY_EXHDR(string2);
 	if (s2len < 0)
-		s2len = 0;				/* shouldn't happen */
+		s2len = 0; /* shouldn't happen */
 
 	s1len = pg_mbstrlen_with_len(VARDATA_ANY(string1), s1len);
 
 	if (s1len > len)
-		s1len = len;			/* truncate string1 to len chars */
+		s1len = len; /* truncate string1 to len chars */
 
 	if (s2len <= 0)
-		len = s1len;			/* nothing to pad with, so don't pad */
+		len = s1len; /* nothing to pad with, so don't pad */
 
 	bytelen = pg_database_encoding_max_length() * len;
 
@@ -183,7 +179,7 @@ lpad(PG_FUNCTION_ARGS)
 				(errcode(ERRCODE_PROGRAM_LIMIT_EXCEEDED),
 				 errmsg("requested length too large")));
 
-	ret = (text *) palloc(VARHDRSZ + bytelen);
+	ret = (text *)palloc(VARHDRSZ + bytelen);
 
 	m = len - s1len;
 
@@ -193,12 +189,12 @@ lpad(PG_FUNCTION_ARGS)
 
 	while (m--)
 	{
-		int			mlen = pg_mblen(ptr2);
+		int mlen = pg_mblen(ptr2);
 
 		memcpy(ptr_ret, ptr2, mlen);
 		ptr_ret += mlen;
 		ptr2 += mlen;
-		if (ptr2 == ptr2end)	/* wrap around at end of s2 */
+		if (ptr2 == ptr2end) /* wrap around at end of s2 */
 			ptr2 = ptr2start;
 	}
 
@@ -206,18 +202,17 @@ lpad(PG_FUNCTION_ARGS)
 
 	while (s1len--)
 	{
-		int			mlen = pg_mblen(ptr1);
+		int mlen = pg_mblen(ptr1);
 
 		memcpy(ptr_ret, ptr1, mlen);
 		ptr_ret += mlen;
 		ptr1 += mlen;
 	}
 
-	SET_VARSIZE(ret, ptr_ret - (char *) ret);
+	SET_VARSIZE(ret, ptr_ret - (char *)ret);
 
 	PG_RETURN_TEXT_P(ret);
 }
-
 
 /********************************************************************
  *
@@ -236,22 +231,22 @@ lpad(PG_FUNCTION_ARGS)
  ********************************************************************/
 
 Datum
-rpad(PG_FUNCTION_ARGS)
+	rpad(PG_FUNCTION_ARGS)
 {
-	text	   *string1 = PG_GETARG_TEXT_PP(0);
-	int32		len = PG_GETARG_INT32(1);
-	text	   *string2 = PG_GETARG_TEXT_PP(2);
-	text	   *ret;
-	char	   *ptr1,
-			   *ptr2,
-			   *ptr2start,
-			   *ptr2end,
-			   *ptr_ret;
-	int			m,
-				s1len,
-				s2len;
+	text *string1 = PG_GETARG_TEXT_PP(0);
+	int32 len = PG_GETARG_INT32(1);
+	text *string2 = PG_GETARG_TEXT_PP(2);
+	text *ret;
+	char *ptr1,
+		*ptr2,
+		*ptr2start,
+		*ptr2end,
+		*ptr_ret;
+	int m,
+		s1len,
+		s2len;
 
-	int			bytelen;
+	int bytelen;
 
 	/* Negative len is silently taken as zero */
 	if (len < 0)
@@ -259,19 +254,19 @@ rpad(PG_FUNCTION_ARGS)
 
 	s1len = VARSIZE_ANY_EXHDR(string1);
 	if (s1len < 0)
-		s1len = 0;				/* shouldn't happen */
+		s1len = 0; /* shouldn't happen */
 
 	s2len = VARSIZE_ANY_EXHDR(string2);
 	if (s2len < 0)
-		s2len = 0;				/* shouldn't happen */
+		s2len = 0; /* shouldn't happen */
 
 	s1len = pg_mbstrlen_with_len(VARDATA_ANY(string1), s1len);
 
 	if (s1len > len)
-		s1len = len;			/* truncate string1 to len chars */
+		s1len = len; /* truncate string1 to len chars */
 
 	if (s2len <= 0)
-		len = s1len;			/* nothing to pad with, so don't pad */
+		len = s1len; /* nothing to pad with, so don't pad */
 
 	bytelen = pg_database_encoding_max_length() * len;
 
@@ -281,7 +276,7 @@ rpad(PG_FUNCTION_ARGS)
 				(errcode(ERRCODE_PROGRAM_LIMIT_EXCEEDED),
 				 errmsg("requested length too large")));
 
-	ret = (text *) palloc(VARHDRSZ + bytelen);
+	ret = (text *)palloc(VARHDRSZ + bytelen);
 	m = len - s1len;
 
 	ptr1 = VARDATA_ANY(string1);
@@ -289,7 +284,7 @@ rpad(PG_FUNCTION_ARGS)
 
 	while (s1len--)
 	{
-		int			mlen = pg_mblen(ptr1);
+		int mlen = pg_mblen(ptr1);
 
 		memcpy(ptr_ret, ptr1, mlen);
 		ptr_ret += mlen;
@@ -301,20 +296,19 @@ rpad(PG_FUNCTION_ARGS)
 
 	while (m--)
 	{
-		int			mlen = pg_mblen(ptr2);
+		int mlen = pg_mblen(ptr2);
 
 		memcpy(ptr_ret, ptr2, mlen);
 		ptr_ret += mlen;
 		ptr2 += mlen;
-		if (ptr2 == ptr2end)	/* wrap around at end of s2 */
+		if (ptr2 == ptr2end) /* wrap around at end of s2 */
 			ptr2 = ptr2start;
 	}
 
-	SET_VARSIZE(ret, ptr_ret - (char *) ret);
+	SET_VARSIZE(ret, ptr_ret - (char *)ret);
 
 	PG_RETURN_TEXT_P(ret);
 }
-
 
 /********************************************************************
  *
@@ -332,11 +326,11 @@ rpad(PG_FUNCTION_ARGS)
  ********************************************************************/
 
 Datum
-btrim(PG_FUNCTION_ARGS)
+	btrim(PG_FUNCTION_ARGS)
 {
-	text	   *string = PG_GETARG_TEXT_PP(0);
-	text	   *set = PG_GETARG_TEXT_PP(1);
-	text	   *ret;
+	text *string = PG_GETARG_TEXT_PP(0);
+	text *set = PG_GETARG_TEXT_PP(1);
+	text *ret;
 
 	ret = dotrim(VARDATA_ANY(string), VARSIZE_ANY_EXHDR(string),
 				 VARDATA_ANY(set), VARSIZE_ANY_EXHDR(set),
@@ -352,10 +346,10 @@ btrim(PG_FUNCTION_ARGS)
  ********************************************************************/
 
 Datum
-btrim1(PG_FUNCTION_ARGS)
+	btrim1(PG_FUNCTION_ARGS)
 {
-	text	   *string = PG_GETARG_TEXT_PP(0);
-	text	   *ret;
+	text *string = PG_GETARG_TEXT_PP(0);
+	text *ret;
 
 	ret = dotrim(VARDATA_ANY(string), VARSIZE_ANY_EXHDR(string),
 				 " ", 1,
@@ -372,7 +366,7 @@ dotrim(const char *string, int stringlen,
 	   const char *set, int setlen,
 	   bool doltrim, bool dortrim)
 {
-	int			i;
+	int i;
 
 	/* Nothing to do if either string or set is empty */
 	if (stringlen > 0 && setlen > 0)
@@ -386,20 +380,20 @@ dotrim(const char *string, int stringlen,
 			 */
 			const char **stringchars;
 			const char **setchars;
-			int		   *stringmblen;
-			int		   *setmblen;
-			int			stringnchars;
-			int			setnchars;
-			int			resultndx;
-			int			resultnchars;
+			int *stringmblen;
+			int *setmblen;
+			int stringnchars;
+			int setnchars;
+			int resultndx;
+			int resultnchars;
 			const char *p;
-			int			len;
-			int			mblen;
+			int len;
+			int mblen;
 			const char *str_pos;
-			int			str_len;
+			int str_len;
 
-			stringchars = (const char **) palloc(stringlen * sizeof(char *));
-			stringmblen = (int *) palloc(stringlen * sizeof(int));
+			stringchars = (const char **)palloc(stringlen * sizeof(char *));
+			stringmblen = (int *)palloc(stringlen * sizeof(int));
 			stringnchars = 0;
 			p = string;
 			len = stringlen;
@@ -412,8 +406,8 @@ dotrim(const char *string, int stringlen,
 				len -= mblen;
 			}
 
-			setchars = (const char **) palloc(setlen * sizeof(char *));
-			setmblen = (int *) palloc(setlen * sizeof(int));
+			setchars = (const char **)palloc(setlen * sizeof(char *));
+			setmblen = (int *)palloc(setlen * sizeof(int));
 			setnchars = 0;
 			p = set;
 			len = setlen;
@@ -426,7 +420,7 @@ dotrim(const char *string, int stringlen,
 				len -= mblen;
 			}
 
-			resultndx = 0;		/* index in stringchars[] */
+			resultndx = 0; /* index in stringchars[] */
 			resultnchars = stringnchars;
 
 			if (doltrim)
@@ -442,7 +436,7 @@ dotrim(const char *string, int stringlen,
 							break;
 					}
 					if (i >= setnchars)
-						break;	/* no match here */
+						break; /* no match here */
 					string += str_len;
 					stringlen -= str_len;
 					resultndx++;
@@ -463,7 +457,7 @@ dotrim(const char *string, int stringlen,
 							break;
 					}
 					if (i >= setnchars)
-						break;	/* no match here */
+						break; /* no match here */
 					stringlen -= str_len;
 					resultnchars--;
 				}
@@ -483,7 +477,7 @@ dotrim(const char *string, int stringlen,
 			{
 				while (stringlen > 0)
 				{
-					char		str_ch = *string;
+					char str_ch = *string;
 
 					for (i = 0; i < setlen; i++)
 					{
@@ -491,7 +485,7 @@ dotrim(const char *string, int stringlen,
 							break;
 					}
 					if (i >= setlen)
-						break;	/* no match here */
+						break; /* no match here */
 					string++;
 					stringlen--;
 				}
@@ -501,7 +495,7 @@ dotrim(const char *string, int stringlen,
 			{
 				while (stringlen > 0)
 				{
-					char		str_ch = string[stringlen - 1];
+					char str_ch = string[stringlen - 1];
 
 					for (i = 0; i < setlen; i++)
 					{
@@ -509,7 +503,7 @@ dotrim(const char *string, int stringlen,
 							break;
 					}
 					if (i >= setlen)
-						break;	/* no match here */
+						break; /* no match here */
 					stringlen--;
 				}
 			}
@@ -537,19 +531,19 @@ dotrim(const char *string, int stringlen,
  ********************************************************************/
 
 Datum
-byteatrim(PG_FUNCTION_ARGS)
+	byteatrim(PG_FUNCTION_ARGS)
 {
-	bytea	   *string = PG_GETARG_BYTEA_PP(0);
-	bytea	   *set = PG_GETARG_BYTEA_PP(1);
-	bytea	   *ret;
-	char	   *ptr,
-			   *end,
-			   *ptr2,
-			   *ptr2start,
-			   *end2;
-	int			m,
-				stringlen,
-				setlen;
+	bytea *string = PG_GETARG_BYTEA_PP(0);
+	bytea *set = PG_GETARG_BYTEA_PP(1);
+	bytea *ret;
+	char *ptr,
+		*end,
+		*ptr2,
+		*ptr2start,
+		*end2;
+	int m,
+		stringlen,
+		setlen;
 
 	stringlen = VARSIZE_ANY_EXHDR(string);
 	setlen = VARSIZE_ANY_EXHDR(set);
@@ -593,7 +587,7 @@ byteatrim(PG_FUNCTION_ARGS)
 		m--;
 	}
 
-	ret = (bytea *) palloc(VARHDRSZ + m);
+	ret = (bytea *)palloc(VARHDRSZ + m);
 	SET_VARSIZE(ret, VARHDRSZ + m);
 	memcpy(VARDATA(ret), ptr, m);
 
@@ -616,11 +610,11 @@ byteatrim(PG_FUNCTION_ARGS)
  ********************************************************************/
 
 Datum
-ltrim(PG_FUNCTION_ARGS)
+	ltrim(PG_FUNCTION_ARGS)
 {
-	text	   *string = PG_GETARG_TEXT_PP(0);
-	text	   *set = PG_GETARG_TEXT_PP(1);
-	text	   *ret;
+	text *string = PG_GETARG_TEXT_PP(0);
+	text *set = PG_GETARG_TEXT_PP(1);
+	text *ret;
 
 	ret = dotrim(VARDATA_ANY(string), VARSIZE_ANY_EXHDR(string),
 				 VARDATA_ANY(set), VARSIZE_ANY_EXHDR(set),
@@ -636,10 +630,10 @@ ltrim(PG_FUNCTION_ARGS)
  ********************************************************************/
 
 Datum
-ltrim1(PG_FUNCTION_ARGS)
+	ltrim1(PG_FUNCTION_ARGS)
 {
-	text	   *string = PG_GETARG_TEXT_PP(0);
-	text	   *ret;
+	text *string = PG_GETARG_TEXT_PP(0);
+	text *ret;
 
 	ret = dotrim(VARDATA_ANY(string), VARSIZE_ANY_EXHDR(string),
 				 " ", 1,
@@ -664,11 +658,11 @@ ltrim1(PG_FUNCTION_ARGS)
  ********************************************************************/
 
 Datum
-rtrim(PG_FUNCTION_ARGS)
+	rtrim(PG_FUNCTION_ARGS)
 {
-	text	   *string = PG_GETARG_TEXT_PP(0);
-	text	   *set = PG_GETARG_TEXT_PP(1);
-	text	   *ret;
+	text *string = PG_GETARG_TEXT_PP(0);
+	text *set = PG_GETARG_TEXT_PP(1);
+	text *ret;
 
 	ret = dotrim(VARDATA_ANY(string), VARSIZE_ANY_EXHDR(string),
 				 VARDATA_ANY(set), VARSIZE_ANY_EXHDR(set),
@@ -684,10 +678,10 @@ rtrim(PG_FUNCTION_ARGS)
  ********************************************************************/
 
 Datum
-rtrim1(PG_FUNCTION_ARGS)
+	rtrim1(PG_FUNCTION_ARGS)
 {
-	text	   *string = PG_GETARG_TEXT_PP(0);
-	text	   *ret;
+	text *string = PG_GETARG_TEXT_PP(0);
+	text *ret;
 
 	ret = dotrim(VARDATA_ANY(string), VARSIZE_ANY_EXHDR(string),
 				 " ", 1,
@@ -695,7 +689,6 @@ rtrim1(PG_FUNCTION_ARGS)
 
 	PG_RETURN_TEXT_P(ret);
 }
-
 
 /********************************************************************
  *
@@ -715,25 +708,25 @@ rtrim1(PG_FUNCTION_ARGS)
  ********************************************************************/
 
 Datum
-translate(PG_FUNCTION_ARGS)
+	translate(PG_FUNCTION_ARGS)
 {
-	text	   *string = PG_GETARG_TEXT_PP(0);
-	text	   *from = PG_GETARG_TEXT_PP(1);
-	text	   *to = PG_GETARG_TEXT_PP(2);
-	text	   *result;
-	char	   *from_ptr,
-			   *to_ptr;
-	char	   *source,
-			   *target;
-	int			m,
-				fromlen,
-				tolen,
-				retlen,
-				i;
-	int			worst_len;
-	int			len;
-	int			source_len;
-	int			from_index;
+	text *string = PG_GETARG_TEXT_PP(0);
+	text *from = PG_GETARG_TEXT_PP(1);
+	text *to = PG_GETARG_TEXT_PP(2);
+	text *result;
+	char *from_ptr,
+		*to_ptr;
+	char *source,
+		*target;
+	int m,
+		fromlen,
+		tolen,
+		retlen,
+		i;
+	int worst_len;
+	int len;
+	int source_len;
+	int from_index;
 
 	m = VARSIZE_ANY_EXHDR(string);
 	if (m <= 0)
@@ -757,7 +750,7 @@ translate(PG_FUNCTION_ARGS)
 				(errcode(ERRCODE_PROGRAM_LIMIT_EXCEEDED),
 				 errmsg("requested length too large")));
 
-	result = (text *) palloc(worst_len + VARHDRSZ);
+	result = (text *)palloc(worst_len + VARHDRSZ);
 	target = VARDATA(result);
 	retlen = 0;
 
@@ -778,7 +771,7 @@ translate(PG_FUNCTION_ARGS)
 		if (i < fromlen)
 		{
 			/* substitute */
-			char	   *p = to_ptr;
+			char *p = to_ptr;
 
 			for (i = 0; i < from_index; i++)
 			{
@@ -793,7 +786,6 @@ translate(PG_FUNCTION_ARGS)
 				target += len;
 				retlen += len;
 			}
-
 		}
 		else
 		{
@@ -841,24 +833,24 @@ translate(PG_FUNCTION_ARGS)
  ********************************************************************/
 
 Datum
-ascii(PG_FUNCTION_ARGS)
+	ascii(PG_FUNCTION_ARGS)
 {
-	text	   *string = PG_GETARG_TEXT_PP(0);
-	int			encoding = GetDatabaseEncoding();
+	text *string = PG_GETARG_TEXT_PP(0);
+	int encoding = GetDatabaseEncoding();
 	unsigned char *data;
 
 	if (VARSIZE_ANY_EXHDR(string) <= 0)
 		PG_RETURN_INT32(0);
 
-	data = (unsigned char *) VARDATA_ANY(string);
+	data = (unsigned char *)VARDATA_ANY(string);
 
 	if (encoding == PG_UTF8 && *data > 127)
 	{
 		/* return the code point for Unicode */
 
-		int			result = 0,
-					tbytes = 0,
-					i;
+		int result = 0,
+			tbytes = 0,
+			i;
 
 		if (*data >= 0xF0)
 		{
@@ -894,8 +886,7 @@ ascii(PG_FUNCTION_ARGS)
 					(errcode(ERRCODE_PROGRAM_LIMIT_EXCEEDED),
 					 errmsg("requested character too large")));
 
-
-		PG_RETURN_INT32((int32) *data);
+		PG_RETURN_INT32((int32)*data);
 	}
 }
 
@@ -922,16 +913,16 @@ ascii(PG_FUNCTION_ARGS)
  ********************************************************************/
 
 Datum
-chr			(PG_FUNCTION_ARGS)
+	chr(PG_FUNCTION_ARGS)
 {
-	uint32		cvalue = PG_GETARG_UINT32(0);
-	text	   *result;
-	int			encoding = GetDatabaseEncoding();
+	uint32 cvalue = PG_GETARG_UINT32(0);
+	text *result;
+	int encoding = GetDatabaseEncoding();
 
 	if (encoding == PG_UTF8 && cvalue > 127)
 	{
 		/* for Unicode we treat the argument as a code point */
-		int			bytes;
+		int bytes;
 		unsigned char *wch;
 
 		/*
@@ -952,9 +943,9 @@ chr			(PG_FUNCTION_ARGS)
 		else
 			bytes = 2;
 
-		result = (text *) palloc(VARHDRSZ + bytes);
+		result = (text *)palloc(VARHDRSZ + bytes);
 		SET_VARSIZE(result, VARHDRSZ + bytes);
-		wch = (unsigned char *) VARDATA(result);
+		wch = (unsigned char *)VARDATA(result);
 
 		if (bytes == 2)
 		{
@@ -988,7 +979,7 @@ chr			(PG_FUNCTION_ARGS)
 	}
 	else
 	{
-		bool		is_mb;
+		bool is_mb;
 
 		/*
 		 * Error out on arguments that make no sense or that we can't validly
@@ -1007,9 +998,9 @@ chr			(PG_FUNCTION_ARGS)
 					 errmsg("requested character too large for encoding: %d",
 							cvalue)));
 
-		result = (text *) palloc(VARHDRSZ + 1);
+		result = (text *)palloc(VARHDRSZ + 1);
 		SET_VARSIZE(result, VARHDRSZ + 1);
-		*VARDATA(result) = (char) cvalue;
+		*VARDATA(result) = (char)cvalue;
 	}
 
 	PG_RETURN_TEXT_P(result);
@@ -1030,16 +1021,16 @@ chr			(PG_FUNCTION_ARGS)
  ********************************************************************/
 
 Datum
-repeat(PG_FUNCTION_ARGS)
+	repeat(PG_FUNCTION_ARGS)
 {
-	text	   *string = PG_GETARG_TEXT_PP(0);
-	int32		count = PG_GETARG_INT32(1);
-	text	   *result;
-	int			slen,
-				tlen;
-	int			i;
-	char	   *cp,
-			   *sp;
+	text *string = PG_GETARG_TEXT_PP(0);
+	int32 count = PG_GETARG_INT32(1);
+	text *result;
+	int slen,
+		tlen;
+	int i;
+	char *cp,
+		*sp;
 
 	if (count < 0)
 		count = 0;
@@ -1052,7 +1043,7 @@ repeat(PG_FUNCTION_ARGS)
 				(errcode(ERRCODE_PROGRAM_LIMIT_EXCEEDED),
 				 errmsg("requested length too large")));
 
-	result = (text *) palloc(tlen);
+	result = (text *)palloc(tlen);
 
 	SET_VARSIZE(result, tlen);
 	cp = VARDATA(result);
@@ -1064,4 +1055,30 @@ repeat(PG_FUNCTION_ARGS)
 	}
 
 	PG_RETURN_TEXT_P(result);
+}
+
+/*
+hello world
+*/
+Datum
+	helloworld(PG_FUNCTION_ARGS)
+{
+	char *hello = "Hello World!";
+	text *result;
+	result = cstring_to_text(hello);
+	PG_RETURN_TEXT_P(result);
+}
+
+Datum
+	strcon(PG_FUNCTION_ARGS)
+{
+	text *str1 = PG_GETARG_TEXT_PP(0);
+	text *str2 = PG_GETARG_TEXT_PP(1);
+	char *result = palloc(VARSIZE_ANY_EXHDR(str1) + VARSIZE_ANY_EXHDR(str2) + 1);
+	memcpy(result, VARDATA_ANY(str1), VARSIZE_ANY_EXHDR(str1));
+	memcpy(result + VARSIZE_ANY_EXHDR(str1), VARDATA_ANY(str2), VARSIZE_ANY_EXHDR(str2));
+	result[VARSIZE_ANY_EXHDR(str1) + VARSIZE_ANY_EXHDR(str2)] = '\0';
+	text *final;
+	final = cstring_to_text(result);
+	PG_RETURN_TEXT_P(final);
 }

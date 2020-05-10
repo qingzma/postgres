@@ -1,39 +1,39 @@
 /*-------------------------------------------------------------------------
  *
  * nodeSeqscan.c
- *	  Support routines for sequential scans of relations.
+ *	  Support routines for naive scans of relations.
  *
  * Portions Copyright (c) 1996-2020, PostgreSQL Global Development Group
  * Portions Copyright (c) 1994, Regents of the University of California
  *
  *
  * IDENTIFICATION
- *	  src/backend/executor/nodeSeqscan.c
+ *	  src/backend/executor/nodeNaivescan.c
  *
  *-------------------------------------------------------------------------
  */
 /*
  * INTERFACE ROUTINES
- *		ExecSeqScan				sequentially scans a relation.
- *		ExecSeqNext				retrieve next tuple in sequential order.
- *		ExecInitSeqScan			creates and initializes a seqscan node.
- *		ExecEndSeqScan			releases any storage allocated.
- *		ExecReScanSeqScan		rescans the relation
+ *		ExecNaiveScan				sequentially scans a relation.
+ *		ExecNaiveNext				retrieve next tuple in sequential order.
+ *		ExecInitNaiveScan			creates and initializes a seqscan node.
+ *		ExecEndNaiveScan			releases any storage allocated.
+ *		ExecReScanNaiveScan		rescans the relation
  *
- *		ExecSeqScanEstimate		estimates DSM space needed for parallel scan
- *		ExecSeqScanInitializeDSM initialize DSM for parallel scan
- *		ExecSeqScanReInitializeDSM reinitialize DSM for fresh parallel scan
- *		ExecSeqScanInitializeWorker attach to DSM info in parallel worker
+ *		ExecNaiveScanEstimate		estimates DSM space needed for parallel scan
+ *		ExecNaiveScanInitializeDSM initialize DSM for parallel scan
+ *		ExecNaiveScanReInitializeDSM reinitialize DSM for fresh parallel scan
+ *		ExecNaiveScanInitializeWorker attach to DSM info in parallel worker
  */
 #include "postgres.h"
 
 #include "access/relscan.h"
 #include "access/tableam.h"
 #include "executor/execdebug.h"
-#include "executor/nodeSeqscan.h"
+#include "executor/nodeNaivescan.h"
 #include "utils/rel.h"
 
-static TupleTableSlot *SeqNext(SeqScanState *node);
+static TupleTableSlot *NaiveNext(NaiveScanState *node);
 
 /* ----------------------------------------------------------------
  *						Scan Support
@@ -41,13 +41,13 @@ static TupleTableSlot *SeqNext(SeqScanState *node);
  */
 
 /* ----------------------------------------------------------------
- *		SeqNext
+ *		NaiveNext
  *
  *		This is a workhorse for ExecSeqScan
  * ----------------------------------------------------------------
  */
 static TupleTableSlot *
-SeqNext(SeqScanState *node)
+NaiveNext(NaiveScanState *node)
 {
 	TableScanDesc scandesc;
 	EState *estate;
@@ -77,7 +77,7 @@ SeqNext(SeqScanState *node)
 	/*
 	 * get the next tuple from the table
 	 */
-	if (table_scan_getnextslot(scandesc, direction, slot))
+	if (heap_naive_getnext(scandesc, direction, slot))
 		return slot;
 	return NULL;
 }
@@ -86,45 +86,45 @@ SeqNext(SeqScanState *node)
  * SeqRecheck -- access method routine to recheck a tuple in EvalPlanQual
  */
 static bool
-SeqRecheck(SeqScanState *node, TupleTableSlot *slot)
+NaiveRecheck(NaiveScanState *node, TupleTableSlot *slot)
 {
 	/*
-	 * Note that unlike IndexScan, SeqScan never use keys in heap_beginscan
+	 * Note that unlike IndexScan, NaiveScan never use keys in heap_beginscan
 	 * (and this is very bad) - so, here we do not check are keys ok or not.
 	 */
 	return true;
 }
 
 /* ----------------------------------------------------------------
- *		ExecSeqScan(node)
+ *		ExecNaiveScan(node)
  *
- *		Scans the relation sequentially and returns the next qualifying
+ *		Scans the relation Naiveuentially and returns the next qualifying
  *		tuple.
  *		We call the ExecScan() routine and pass it the appropriate
  *		access method functions.
  * ----------------------------------------------------------------
  */
 static TupleTableSlot *
-ExecSeqScan(PlanState *pstate)
+ExecNaiveScan(PlanState *pstate)
 {
-	SeqScanState *node = castNode(SeqScanState, pstate);
+	NaiveScanState *node = castNode(NaiveScanState, pstate);
 
 	return ExecScan(&node->ss,
-					(ExecScanAccessMtd)SeqNext,
-					(ExecScanRecheckMtd)SeqRecheck);
+					(ExecScanAccessMtd)NaiveNext,
+					(ExecScanRecheckMtd)NaiveRecheck);
 }
 
 /* ----------------------------------------------------------------
- *		ExecInitSeqScan
+ *		ExecInitNaiveScan
  * ----------------------------------------------------------------
  */
-SeqScanState *
-ExecInitSeqScan(SeqScan *node, EState *estate, int eflags)
+NaiveScanState *
+ExecInitNaiveScan(NaiveScan *node, EState *estate, int eflags)
 {
-	SeqScanState *scanstate;
+	NaiveScanState *scanstate;
 
 	/*
-	 * Once upon a time it was possible to have an outerPlan of a SeqScan, but
+	 * Once upon a time it was possible to have an outerPlan of a NaiveScan, but
 	 * not any more.
 	 */
 	Assert(outerPlan(node) == NULL);
@@ -133,10 +133,10 @@ ExecInitSeqScan(SeqScan *node, EState *estate, int eflags)
 	/*
 	 * create state structure
 	 */
-	scanstate = makeNode(SeqScanState);
+	scanstate = makeNode(NaiveScanState);
 	scanstate->ss.ps.plan = (Plan *)node;
 	scanstate->ss.ps.state = estate;
-	scanstate->ss.ps.ExecProcNode = ExecSeqScan;
+	scanstate->ss.ps.ExecProcNode = ExecNaiveScan;
 
 	/*
 	 * Miscellaneous initialization
@@ -174,12 +174,12 @@ ExecInitSeqScan(SeqScan *node, EState *estate, int eflags)
 }
 
 /* ----------------------------------------------------------------
- *		ExecEndSeqScan
+ *		ExecEndNaiveScan
  *
  *		frees any storage allocated through C routines.
  * ----------------------------------------------------------------
  */
-void ExecEndSeqScan(SeqScanState *node)
+void ExecEndNaiveScan(NaiveScanState *node)
 {
 	TableScanDesc scanDesc;
 
@@ -213,12 +213,12 @@ void ExecEndSeqScan(SeqScanState *node)
  */
 
 /* ----------------------------------------------------------------
- *		ExecReScanSeqScan
+ *		ExecReScanNaiveScan
  *
  *		Rescans the relation.
  * ----------------------------------------------------------------
  */
-void ExecReScanSeqScan(SeqScanState *node)
+void ExecReScanNaiveScan(NaiveScanState *node)
 {
 	TableScanDesc scan;
 
@@ -231,77 +231,77 @@ void ExecReScanSeqScan(SeqScanState *node)
 	ExecScanReScan((ScanState *)node);
 }
 
-/* ----------------------------------------------------------------
- *						Parallel Scan Support
- * ----------------------------------------------------------------
- */
+// /* ----------------------------------------------------------------
+//  *						Parallel Scan Support
+//  * ----------------------------------------------------------------
+//  */
 
-/* ----------------------------------------------------------------
- *		ExecSeqScanEstimate
- *
- *		Compute the amount of space we'll need in the parallel
- *		query DSM, and inform pcxt->estimator about our needs.
- * ----------------------------------------------------------------
- */
-void ExecSeqScanEstimate(SeqScanState *node,
-						 ParallelContext *pcxt)
-{
-	EState *estate = node->ss.ps.state;
+// /* ----------------------------------------------------------------
+//  *		ExecSeqScanEstimate
+//  *
+//  *		Compute the amount of space we'll need in the parallel
+//  *		query DSM, and inform pcxt->estimator about our needs.
+//  * ----------------------------------------------------------------
+//  */
+// void ExecSeqScanEstimate(NaiveScanState *node,
+// 						 ParallelContext *pcxt)
+// {
+// 	EState *estate = node->ss.ps.state;
 
-	node->pscan_len = table_parallelscan_estimate(node->ss.ss_currentRelation,
-												  estate->es_snapshot);
-	shm_toc_estimate_chunk(&pcxt->estimator, node->pscan_len);
-	shm_toc_estimate_keys(&pcxt->estimator, 1);
-}
+// 	node->pscan_len = table_parallelscan_estimate(node->ss.ss_currentRelation,
+// 												  estate->es_snapshot);
+// 	shm_toc_estimate_chunk(&pcxt->estimator, node->pscan_len);
+// 	shm_toc_estimate_keys(&pcxt->estimator, 1);
+// }
 
-/* ----------------------------------------------------------------
- *		ExecSeqScanInitializeDSM
- *
- *		Set up a parallel heap scan descriptor.
- * ----------------------------------------------------------------
- */
-void ExecSeqScanInitializeDSM(SeqScanState *node,
-							  ParallelContext *pcxt)
-{
-	EState *estate = node->ss.ps.state;
-	ParallelTableScanDesc pscan;
+// /* ----------------------------------------------------------------
+//  *		ExecSeqScanInitializeDSM
+//  *
+//  *		Set up a parallel heap scan descriptor.
+//  * ----------------------------------------------------------------
+//  */
+// void ExecSeqScanInitializeDSM(NaiveScanState *node,
+// 							  ParallelContext *pcxt)
+// {
+// 	EState *estate = node->ss.ps.state;
+// 	ParallelTableScanDesc pscan;
 
-	pscan = shm_toc_allocate(pcxt->toc, node->pscan_len);
-	table_parallelscan_initialize(node->ss.ss_currentRelation,
-								  pscan,
-								  estate->es_snapshot);
-	shm_toc_insert(pcxt->toc, node->ss.ps.plan->plan_node_id, pscan);
-	node->ss.ss_currentScanDesc =
-		table_beginscan_parallel(node->ss.ss_currentRelation, pscan);
-}
+// 	pscan = shm_toc_allocate(pcxt->toc, node->pscan_len);
+// 	table_parallelscan_initialize(node->ss.ss_currentRelation,
+// 								  pscan,
+// 								  estate->es_snapshot);
+// 	shm_toc_insert(pcxt->toc, node->ss.ps.plan->plan_node_id, pscan);
+// 	node->ss.ss_currentScanDesc =
+// 		table_beginscan_parallel(node->ss.ss_currentRelation, pscan);
+// }
 
-/* ----------------------------------------------------------------
- *		ExecSeqScanReInitializeDSM
- *
- *		Reset shared state before beginning a fresh scan.
- * ----------------------------------------------------------------
- */
-void ExecSeqScanReInitializeDSM(SeqScanState *node,
-								ParallelContext *pcxt)
-{
-	ParallelTableScanDesc pscan;
+// /* ----------------------------------------------------------------
+//  *		ExecSeqScanReInitializeDSM
+//  *
+//  *		Reset shared state before beginning a fresh scan.
+//  * ----------------------------------------------------------------
+//  */
+// void ExecSeqScanReInitializeDSM(NaiveScanState *node,
+// 								ParallelContext *pcxt)
+// {
+// 	ParallelTableScanDesc pscan;
 
-	pscan = node->ss.ss_currentScanDesc->rs_parallel;
-	table_parallelscan_reinitialize(node->ss.ss_currentRelation, pscan);
-}
+// 	pscan = node->ss.ss_currentScanDesc->rs_parallel;
+// 	table_parallelscan_reinitialize(node->ss.ss_currentRelation, pscan);
+// }
 
-/* ----------------------------------------------------------------
- *		ExecSeqScanInitializeWorker
- *
- *		Copy relevant information from TOC into planstate.
- * ----------------------------------------------------------------
- */
-void ExecSeqScanInitializeWorker(SeqScanState *node,
-								 ParallelWorkerContext *pwcxt)
-{
-	ParallelTableScanDesc pscan;
+// /* ----------------------------------------------------------------
+//  *		ExecSeqScanInitializeWorker
+//  *
+//  *		Copy relevant information from TOC into planstate.
+//  * ----------------------------------------------------------------
+//  */
+// void ExecSeqScanInitializeWorker(NaiveScanState *node,
+// 								 ParallelWorkerContext *pwcxt)
+// {
+// 	ParallelTableScanDesc pscan;
 
-	pscan = shm_toc_lookup(pwcxt->toc, node->ss.ps.plan->plan_node_id, false);
-	node->ss.ss_currentScanDesc =
-		table_beginscan_parallel(node->ss.ss_currentRelation, pscan);
-}
+// 	pscan = shm_toc_lookup(pwcxt->toc, node->ss.ps.plan->plan_node_id, false);
+// 	node->ss.ss_currentScanDesc =
+// 		table_beginscan_parallel(node->ss.ss_currentRelation, pscan);
+// }
