@@ -1,0 +1,1 @@
+/home/u1796377/Documents/workspace/postgresql/build/src/test/locale/koi8-to-win1251/Makefile

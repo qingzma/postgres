@@ -7216,6 +7216,12 @@
 { oid => '3314', descr => 'SYSTEM tablesample method handler',
   proname => 'system', provolatile => 'v', prorettype => 'tsm_handler',
   proargtypes => 'internal', prosrc => 'tsm_system_handler' },
+{ oid => '9991', descr => 'random tablesample method handler',
+  proname => 'random', provolatile => 'v', prorettype => 'tsm_handler',
+  proargtypes => 'internal', prosrc => 'tsm_random_handler' },
+{ oid => '9992', descr => 'weighted tablesample method handler',
+  proname => 'weighted', provolatile => 'v', prorettype => 'tsm_handler',
+  proargtypes => 'internal', prosrc => 'tsm_weighted_handler' },
 
 # cryptographic
 { oid => '2311', descr => 'MD5 hash',

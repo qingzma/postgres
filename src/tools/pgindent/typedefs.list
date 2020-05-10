@@ -1951,6 +1951,7 @@ RI_QueryKey
 RTEKind
 RWConflict
 RWConflictPoolHeader
+RandomSamplerData
 RandomState
 Range
 RangeBound
@@ -2647,6 +2648,7 @@ WalTimeSample
 WalUsage
 WalWriteMethod
 Walfile
+WeightedSamplerData
 WindowAgg
 WindowAggPath
 WindowAggState

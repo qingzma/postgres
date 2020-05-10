@@ -15,6 +15,8 @@ include $(top_builddir)/src/Makefile.global
 OBJS = \
 	bernoulli.o \
 	system.o \
+	random.o \
+	weighted.o \
 	tablesample.o
 
 include $(top_srcdir)/src/backend/common.mk
