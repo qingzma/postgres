@@ -1,1 +1,0 @@
-/home/u1796377/Documents/workspace/postgresql/build/build/build/src/test/modules/snapshot_too_old/Makefile

@@ -1,1 +1,0 @@
-/home/u1796377/Documents/workspace/postgresql/build/src/test/modules/test_ddl_deparse/Makefile

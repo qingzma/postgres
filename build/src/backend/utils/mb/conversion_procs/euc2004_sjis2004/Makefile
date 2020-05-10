@@ -1,1 +1,0 @@
-/home/u1796377/Documents/workspace/postgresql/src/backend/utils/mb/conversion_procs/euc2004_sjis2004/Makefile

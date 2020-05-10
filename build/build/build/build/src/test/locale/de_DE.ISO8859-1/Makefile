@@ -1,1 +1,0 @@
-/home/u1796377/Documents/workspace/postgresql/build/build/build/src/test/locale/de_DE.ISO8859-1/Makefile

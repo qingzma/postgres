@@ -1,1 +1,0 @@
-/home/u1796377/Documents/workspace/postgresql/build/build/src/interfaces/ecpg/test/compat_informix/Makefile
